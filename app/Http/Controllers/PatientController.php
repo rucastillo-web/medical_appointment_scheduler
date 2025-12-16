@@ -1,0 +1,94 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Patient;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+
+class PatientController extends Controller
+{
+    /**
+     * Display a listing of patients
+     */
+    public function index()
+    {
+        $patients = Patient::all();
+        return view('patients.index', compact('patients'));
+    }
+
+    /**
+     * Show the form for creating a new patient
+     */
+    public function create()
+    {
+        return view('patients.create');
+    }
+
+    /**
+     * Store a newly created patient
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
+            'date_of_birth' => 'required|date',
+            'gender' => 'required|in:male,female,other',
+            'phone_number' => 'required|string',
+            'email' => 'required|email|unique:patients',
+            'address' => 'required|string',
+        ]);
+
+        Patient::create($validated);
+
+        return redirect()->route('patients.index')->with('success', 'Patient created successfully.');
+    }
+
+    /**
+     * Display a specific patient
+     */
+    public function show(Patient $patient)
+    {
+        $patient->load('appointments');
+        return view('patients.show', compact('patient'));
+    }
+
+    /**
+     * Show the form for editing a patient
+     */
+    public function edit(Patient $patient)
+    {
+        return view('patients.edit', compact('patient'));
+    }
+
+    /**
+     * Update a patient
+     */
+    public function update(Request $request, Patient $patient)
+    {
+        $validated = $request->validate([
+            'first_name' => 'sometimes|string',
+            'last_name' => 'sometimes|string',
+            'date_of_birth' => 'sometimes|date',
+            'gender' => 'sometimes|in:male,female,other',
+            'phone_number' => 'sometimes|string',
+            'email' => 'sometimes|email|unique:patients,email,' . $patient->patient_id . ',patient_id',
+            'address' => 'sometimes|string',
+        ]);
+
+        $patient->update($validated);
+
+        return redirect()->route('patients.index')->with('success', 'Patient updated successfully.');
+    }
+
+    /**
+     * Delete a patient
+     */
+    public function destroy(Patient $patient)
+    {
+        $patient->delete();
+
+        return redirect()->route('patients.index')->with('success', 'Patient deleted successfully.');
+    }
+}
